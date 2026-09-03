@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package hedging.v1;
+
+option go_package = "github.com/zhangjinteng/6mm-hedging-bot/internal/pb/hedging/v1;hedgingv1";
+
+import "google/protobuf/timestamp.proto";
+
+service HedgingService {
+  rpc UpsertExposure(UpsertExposureRequest) returns (ExposureSnapshot);
+  rpc UpsertPosition(UpsertPositionRequest) returns (PositionSnapshot);
+  rpc RunHedge(RunHedgeRequest) returns (RunHedgeResponse);
+  rpc ExitHedge(RunHedgeRequest) returns (RunHedgeResponse);
+  rpc EnqueueHedgeRun(RunHedgeRequest) returns (EnqueueHedgeRunResponse);
+}
+
+message UpsertExposureRequest {
+  string source = 1;
+  string symbol = 2;
+  string net_quantity = 3;
+  string net_notional_usdt = 4;
+  string mark_price = 5;
+  google.protobuf.Timestamp observed_at = 6;
+  uint64 agent_id = 7;
+}
+
+message UpsertPositionRequest {
+  string exchange = 1;
+  string account_name = 2;
+  string symbol = 3;
+  string position_side = 4;
+  string quantity = 5;
+  string notional_usdt = 6;
+  string entry_price = 7;
+  string mark_price = 8;
+  google.protobuf.Timestamp observed_at = 9;
+  uint64 agent_id = 10;
+  uint64 exchange_account_id = 11;
+}
+
+message RunHedgeRequest {
+  uint64 config_id = 1;
+  string source = 2;
+  string symbol = 3;
+}
+
+message EnqueueHedgeRunResponse {
+  string id = 1;
+  string queue = 2;
+  string type = 3;
+  string state = 4;
+  int32 max_retry = 5;
+}
+
+message RunHedgeResponse {
+  uint64 config_id = 1;
+  ExposureSnapshot exposure = 2;
+  PositionSnapshot position = 3;
+  HedgeDecision decision = 4;
+  OrderPlan order_plan = 5;
+  OrderExecution execution = 6;
+}
+
+message ExposureSnapshot {
+  uint64 id = 1;
+  string source = 2;
+  string symbol = 3;
+  string net_quantity = 4;
+  string net_notional_usdt = 5;
+  string mark_price = 6;
+  google.protobuf.Timestamp observed_at = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  uint64 agent_id = 10;
+}
+
+message PositionSnapshot {
+  uint64 id = 1;
+  string exchange = 2;
+  string account_name = 3;
+  string symbol = 4;
+  string position_side = 5;
+  string quantity = 6;
+  string notional_usdt = 7;
+  string entry_price = 8;
+  string mark_price = 9;
+  google.protobuf.Timestamp observed_at = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  uint64 agent_id = 13;
+  uint64 exchange_account_id = 14;
+}
+
+message HedgeDecision {
+  string action = 1;
+  string side = 2;
+  string symbol = 3;
+  string target_notional_usdt = 4;
+  string current_notional_usdt = 5;
+  string adjustment_usdt = 6;
+  string order_quantity = 7;
+  string limit_price = 8;
+  bool reduce_only = 9;
+  string reason = 10;
+  bool dry_run = 11;
+}
+
+message OrderPlan {
+  uint64 id = 1;
+  string idempotency_key = 2;
+  uint64 config_id = 3;
+  string source = 4;
+  string exchange = 5;
+  string account_name = 6;
+  string symbol = 7;
+  string side = 8;
+  string position_side = 9;
+  string order_type = 10;
+  string quantity = 11;
+  string price = 12;
+  string notional_usdt = 13;
+  bool reduce_only = 14;
+  string reason = 15;
+  string status = 16;
+  google.protobuf.Timestamp created_at = 17;
+  google.protobuf.Timestamp updated_at = 18;
+}
+
+message OrderExecution {
+  uint64 id = 1;
+  uint64 order_plan_id = 2;
+  string exchange_order_id = 3;
+  string client_order_id = 4;
+  string status = 5;
+  string filled_quantity = 6;
+  string avg_price = 7;
+  string fee_usdt = 8;
+  string error_message = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}

@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS audit_events;
+DROP TABLE IF EXISTS order_executions;
+DROP TABLE IF EXISTS order_plans;
+DROP TABLE IF EXISTS hedge_position_snapshots;
+DROP TABLE IF EXISTS hedge_monitor_snapshots;
+DROP TABLE IF EXISTS exposure_snapshots;
+DROP TABLE IF EXISTS hedge_configs;
+DROP TABLE IF EXISTS exchange_accounts;
+DROP FUNCTION IF EXISTS set_updated_at();
+DROP TABLE IF EXISTS schema_migrations;

@@ -1,0 +1,1885 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>交易所适配器测试台</title>
+  <style>
+    :root {
+      --bg: #f3f4ef;
+      --ink: #171916;
+      --muted: #667064;
+      --line: #d8ded4;
+      --panel: #fbfcf8;
+      --panel-2: #eef3ea;
+      --green: #11845b;
+      --green-2: #d9efe5;
+      --amber: #b76a11;
+      --amber-2: #fff0d6;
+      --red: #b84040;
+      --red-2: #ffe0df;
+      --blue: #255c99;
+      --blue-2: #dfeafa;
+      --shadow: 0 16px 44px rgba(18, 27, 18, 0.10);
+      --mono: "SFMono-Regular", "Cascadia Code", "Menlo", monospace;
+      --body: "Avenir Next", "Helvetica Neue", "PingFang SC", sans-serif;
+      --display: "DIN Alternate", "Avenir Next Condensed", "PingFang SC", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--body);
+      background:
+        repeating-linear-gradient(90deg, rgba(23, 25, 22, 0.035) 0 1px, transparent 1px 88px),
+        linear-gradient(135deg, #f8faf4 0%, #eef3ea 46%, #f4f1ea 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(251, 252, 248, 0.88);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 42px;
+      height: 42px;
+      border: 2px solid var(--ink);
+      display: grid;
+      place-items: center;
+      background: var(--green-2);
+      box-shadow: 5px 5px 0 var(--ink);
+      flex: 0 0 auto;
+    }
+
+    .mark span {
+      font-family: var(--display);
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(24px, 3vw, 42px);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .button {
+      height: 38px;
+      border: 1px solid var(--ink);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border-radius: 6px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 3px 3px 0 rgba(23, 25, 22, 0.16);
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+
+    .button:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 rgba(23, 25, 22, 0.18);
+    }
+
+    .button:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 rgba(23, 25, 22, 0.18);
+    }
+
+    .button.primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .button.blue {
+      background: var(--blue);
+      color: white;
+    }
+
+    .button.warn {
+      background: var(--amber-2);
+    }
+
+    .button.danger {
+      background: var(--red-2);
+    }
+
+    .button.ghost {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .button.small {
+      height: 30px;
+      padding: 0 9px;
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 410px;
+      gap: 14px;
+      padding: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(251, 252, 248, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 15px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .panel-title::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border: 2px solid var(--ink);
+      background: var(--green);
+      box-shadow: 2px 2px 0 var(--ink);
+      flex: 0 0 auto;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    .config-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #c8d0c4;
+      background: #ffffff;
+      color: var(--ink);
+      border-radius: 5px;
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(17, 132, 91, 0.16);
+    }
+
+    .field textarea {
+      min-height: 146px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .switch {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .switch input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--green);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .method-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .tab {
+      min-height: 45px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+      padding: 7px 9px;
+      text-align: left;
+      color: var(--ink);
+      transition: border 120ms ease, background 120ms ease, transform 120ms ease;
+    }
+
+    .tab:hover {
+      border-color: var(--ink);
+      transform: translateY(-1px);
+    }
+
+    .tab.active {
+      border-color: var(--ink);
+      background: var(--green-2);
+      box-shadow: inset 4px 0 0 var(--green);
+    }
+
+    .tab.danger.active {
+      background: var(--red-2);
+      box-shadow: inset 4px 0 0 var(--red);
+    }
+
+    .tab strong {
+      font-size: 13px;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .tab span {
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .method-stage {
+      padding: 15px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .method-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .method-head h2 {
+      margin: 0;
+      font-family: var(--display);
+      letter-spacing: 0;
+      font-size: clamp(22px, 3vw, 34px);
+    }
+
+    .method-desc {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .method-form {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .span-2 {
+      grid-column: span 2;
+    }
+
+    .span-3 {
+      grid-column: 1 / -1;
+    }
+
+    .run-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--muted);
+    }
+
+    .status-pill.ok .status-dot {
+      background: var(--green);
+    }
+
+    .status-pill.warn .status-dot {
+      background: var(--amber);
+    }
+
+    .status-pill.error .status-dot {
+      background: var(--red);
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .result-pane {
+      position: sticky;
+      top: 91px;
+      max-height: calc(100vh - 108px);
+      display: grid;
+      grid-template-rows: auto minmax(220px, 1fr) auto;
+    }
+
+    pre {
+      margin: 0;
+      padding: 13px;
+      overflow: auto;
+      background: #11140f;
+      color: #eaf4e3;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+      border-radius: 0;
+      min-height: 240px;
+    }
+
+    .history {
+      border-top: 1px solid var(--line);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      max-height: 260px;
+      overflow: auto;
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+    }
+
+    .history-row button {
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      font-weight: 800;
+      padding: 0;
+    }
+
+    .method-token {
+      font-family: var(--mono);
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .section-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .hint {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--blue-2);
+      color: #1e3550;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .hint.warn {
+      background: var(--amber-2);
+      color: #654011;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 2px 0;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1360px) {
+      .workspace {
+        grid-template-columns: 300px minmax(0, 1fr);
+      }
+
+      .result-pane {
+        grid-column: 1 / -1;
+        position: static;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .method-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .method-form,
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .span-2,
+      .span-3 {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"><span>适</span></div>
+        <div>
+          <h1>交易所适配器测试台</h1>
+          <div class="subtitle">单文件测试台：覆盖交易所适配器八个方法，并附带当前项目接口冒烟测试。</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="modeStatus" class="status-pill warn"><span class="status-dot"></span>后端接口</span>
+        <button class="button small ghost" id="copyPayloadBtn" type="button">复制请求</button>
+        <button class="button small ghost" id="copyResultBtn" type="button">复制结果</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">运行配置</div>
+        </div>
+        <div class="panel-body config-grid">
+          <div class="field">
+            <label for="baseUrl">后端地址</label>
+            <input id="baseUrl" value="http://127.0.0.1:7892" spellcheck="false">
+          </div>
+
+          <label class="switch">
+            <input id="sandbox" type="checkbox" checked>
+            <span>测试网 / 模拟盘</span>
+          </label>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="exchange">交易所（exchange）</label>
+              <select id="exchange">
+                <option>Binance</option>
+                <option>Bybit</option>
+                <option>Bitget</option>
+                <option>OKX</option>
+                <option>Gate</option>
+                <option>Hyperliquid</option>
+                <option>Aster</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ccxtId">CCXT 标识（ccxt_id）</label>
+              <input id="ccxtId" value="binanceusdm" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="accountName">账号名称（account_name）</label>
+            <input id="accountName" value="币安模拟盘" spellcheck="false">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="marketType">市场类型（market_type）</label>
+              <select id="marketType">
+                <option value="swap">swap</option>
+                <option value="future">future</option>
+                <option value="spot">spot</option>
+                <option value="margin">margin</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="defaultSettle">结算币种（default_settle）</label>
+              <input id="defaultSettle" value="USDT" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="category">产品分类（category）</label>
+              <input id="category" value="linear" spellcheck="false">
+            </div>
+            <div class="field">
+              <label for="accountType">账户类型（account_type）</label>
+              <input id="accountType" placeholder="unified" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="productType">产品类型（product_type）</label>
+            <input id="productType" placeholder="USDT-FUTURES" spellcheck="false">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="positionMode">持仓模式（position_mode）</label>
+              <select id="positionMode">
+                <option value="one_way">one_way（单向持仓）</option>
+                <option value="hedge">hedge（双向持仓）</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="marginMode">保证金模式（margin_mode）</label>
+              <select id="marginMode">
+                <option value="cross">cross（全仓）</option>
+                <option value="isolated">isolated（逐仓）</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="recvWindow">接收窗口（recv_window_ms）</label>
+              <input id="recvWindow" type="number" min="0" max="60000" value="5000">
+            </div>
+            <div class="field">
+              <label for="rateLimit">限频间隔（rate_limit_ms）</label>
+              <input id="rateLimit" type="number" min="0" max="60000" value="0">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="apiKey">API Key（api_key）<span>可空</span></label>
+            <input id="apiKey" type="password" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="field">
+            <label for="apiSecret">API Secret（api_secret）<span>可空</span></label>
+            <input id="apiSecret" type="password" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="field">
+            <label for="passphrase">口令（passphrase）<span>OKX/Bitget 必填</span></label>
+            <input id="passphrase" type="password" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div>
+            <div class="section-label">测试网预设</div>
+            <div class="preset-grid">
+              <button class="button small" data-preset="binance" type="button">币安模拟盘</button>
+              <button class="button small" data-preset="bybit" type="button">Bybit 测试网</button>
+              <button class="button small" data-preset="bitget" type="button">Bitget Demo 模拟盘</button>
+              <button class="button small" data-preset="okx" type="button">OKX 模拟盘（越南）</button>
+              <button class="button small" data-preset="gate" type="button">Gate 模拟盘</button>
+              <button class="button small" data-preset="hyperliquid" type="button">Hyperliquid</button>
+              <button class="button small" data-preset="aster" type="button">Aster 测试网</button>
+            </div>
+          </div>
+
+          <div class="hint">
+            当前页面请求后端适配器调试接口；密钥仅随本次请求传给当前适配器，下方“项目工作流”用于验证服务完整链路。
+          </div>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div id="methodTabs" class="method-tabs" aria-label="交易所适配器方法"></div>
+        <div class="method-stage">
+          <div class="method-head">
+            <div>
+              <h2 id="methodTitle">获取余额</h2>
+              <p id="methodDescription" class="method-desc"></p>
+            </div>
+            <span id="methodEndpointPill" class="status-pill warn"><span class="status-dot"></span><span></span></span>
+          </div>
+
+          <div id="methodForm" class="method-form"></div>
+
+          <div class="field span-3">
+            <label for="payloadEditor">请求参数（JSON）</label>
+            <textarea id="payloadEditor" spellcheck="false"></textarea>
+          </div>
+
+          <div class="run-strip">
+            <button class="button primary" id="runMethodBtn" type="button">运行当前方法</button>
+            <span id="lastRunStatus" class="status-pill"><span class="status-dot"></span>就绪</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <section>
+            <div class="panel-title">项目工作流</div>
+            <p class="method-desc">这些按钮调用当前 Go 服务已经存在的接口路由，可用于验证服务、账号、敞口、持仓、对冲执行链路。</p>
+            <div class="workflow-grid">
+              <button class="button small" data-workflow="health" type="button">健康检查</button>
+              <button class="button small" data-workflow="options" type="button">交易所选项</button>
+              <button class="button small" data-workflow="syncMarkets" type="button">同步交易对</button>
+              <button class="button small" data-workflow="listMarkets" type="button">交易对列表</button>
+              <button class="button small" data-workflow="listAccounts" type="button">账号列表</button>
+              <button class="button small" data-workflow="createAccount" type="button">创建测试账号</button>
+              <button class="button small" data-workflow="upsertExposure" type="button">写入敞口</button>
+              <button class="button small" data-workflow="upsertPosition" type="button">写入持仓</button>
+              <button class="button small" data-workflow="createConfig" type="button">创建对冲配置</button>
+              <button class="button small" data-workflow="runHedge" type="button">执行对冲</button>
+              <button class="button small" data-workflow="exitHedge" type="button">退出对冲</button>
+              <button class="button small" data-workflow="audit" type="button">审计日志</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="panel result-pane">
+        <div class="panel-header">
+          <div class="panel-title">响应结果</div>
+          <button class="button small ghost" id="clearHistoryBtn" type="button">清空</button>
+        </div>
+        <pre id="resultOutput">就绪。</pre>
+        <div id="historyView" class="history"></div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+    const optionLabels = {
+      one_way: "one_way（单向持仓）",
+      hedge: "hedge（双向持仓）",
+      cross: "cross（全仓）",
+      isolated: "isolated（逐仓）"
+    };
+
+    const presets = {
+      binance: {
+        exchange: "Binance",
+        account_name: "币安模拟盘",
+        ccxt_id: "binanceusdm",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDT",
+        account_type: "",
+        product_type: "",
+        category: "linear",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      },
+      bybit: {
+        exchange: "Bybit",
+        account_name: "Bybit Demo 模拟盘",
+        ccxt_id: "bybit",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDT",
+        account_type: "unified",
+        product_type: "",
+        category: "linear",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      },
+      bitget: {
+        exchange: "Bitget",
+        account_name: "Bitget Demo 模拟盘",
+        ccxt_id: "bitget",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDT",
+        account_type: "unified",
+        product_type: "USDT-FUTURES",
+        category: "",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      },
+      okx: {
+        exchange: "OKX",
+        account_name: "OKX 模拟盘",
+        ccxt_id: "okx",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDT",
+        account_type: "",
+        product_type: "",
+        category: "",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      },
+      gate: {
+        exchange: "Gate",
+        account_name: "Gate 模拟盘",
+        ccxt_id: "gate",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDT",
+        account_type: "",
+        product_type: "",
+        category: "",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      },
+      hyperliquid: {
+        exchange: "Hyperliquid",
+        account_name: "Hyperliquid 测试网",
+        ccxt_id: "hyperliquid",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDC",
+        account_type: "",
+        product_type: "",
+        category: "",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      },
+      aster: {
+        exchange: "Aster",
+        account_name: "Aster 测试网",
+        ccxt_id: "aster",
+        market_type: "swap",
+        sandbox: true,
+        default_settle: "USDT",
+        account_type: "",
+        product_type: "",
+        category: "linear",
+        position_mode: "one_way",
+        margin_mode: "cross"
+      }
+    };
+
+    const methodParamPresets = {
+      binanceusdm: {
+        fetchBalance: { portfolioMargin: true },
+        setLeverage: { papi: true }
+      },
+      bybit: {
+        fetchBalance: { coin: "USDT" }
+      },
+      bitget: {
+        fetchBalance: (account, values, existing) => bitgetFetchBalanceParams(account, existing)
+      },
+      okx: {
+        fetchBalance: { ccy: "USDT" },
+        setMarginMode: { leverage: 1 }
+      },
+      hyperliquid: {
+        fetchBalance: { user: "0x..." }
+      },
+      gate: {
+        fetchPositions: { holding: true, positions_limit: 50 },
+        setLeverage: (account, values, existing) => gateSetLeverageParams(account, values, existing)
+      }
+    };
+
+    const methodDefs = [
+      {
+        id: "fetchBalance",
+        title: "获取余额",
+        short: "余额",
+        endpoint: "/api/v1/exchange-adapter/fetch-balance",
+        description: "测试获取余额方法，默认返回结算币资产。连接真实交易所时需要账户读取权限。",
+        fields: [
+          { key: "assets", label: "资产列表（assets，逗号分隔）", type: "text", value: defaultSettleAsset() },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({ account: accountPayload(), assets: csv(values.assets), params: jsonValue(values.params, {}) })
+      },
+      {
+        id: "fetchPositions",
+        title: "获取仓位",
+        short: "仓位",
+        endpoint: "/api/v1/exchange-adapter/fetch-positions",
+        description: "测试获取仓位方法，连接真实交易所时需要账户读取权限。",
+        fields: [
+          { key: "symbols", label: "交易对列表（symbols，逗号分隔）", type: "text", value: defaultSymbol() },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({ account: accountPayload(), symbols: csv(values.symbols), params: jsonValue(values.params, {}) })
+      },
+      {
+        id: "fetchTicker",
+        title: "获取行情",
+        short: "行情",
+        endpoint: "/api/v1/exchange-adapter/fetch-ticker",
+        description: "测试获取行情方法，后端会请求交易所适配器返回最新行情。",
+        fields: [
+          { key: "symbol", label: "交易对（symbol）", type: "text", value: defaultSymbol() },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({ account: accountPayload(), symbol: clean(values.symbol), params: jsonValue(values.params, {}) })
+      },
+      {
+        id: "fetchMarkets",
+        title: "获取交易对",
+        short: "交易对",
+        endpoint: "/api/v1/exchange-adapter/fetch-markets",
+        description: "测试获取交易所支持交易对列表，后端只请求公开市场元数据。",
+        fields: [
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({ account: accountPayload(), params: jsonValue(values.params, {}) })
+      },
+      {
+        id: "setLeverage",
+        title: "设置杠杆",
+        short: "杠杆",
+        endpoint: "/api/v1/exchange-adapter/set-leverage",
+        description: "测试设置杠杆方法，后端会把 symbol 和 leverage 传给交易所适配器。",
+        fields: [
+          { key: "symbol", label: "交易对（symbol）", type: "text", value: defaultSymbol() },
+          { key: "leverage", label: "杠杆倍数（leverage）", type: "number", value: "2" },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({
+          account: accountPayload(),
+          symbol: clean(values.symbol),
+          leverage: Number(values.leverage),
+          params: jsonValue(values.params, {})
+        })
+      },
+      {
+        id: "setMarginMode",
+        title: "设置保证金模式",
+        short: "保证金",
+        endpoint: "/api/v1/exchange-adapter/set-margin-mode",
+        description: "测试设置保证金模式方法，支持 cross / isolated。",
+        fields: [
+          { key: "symbol", label: "交易对（symbol）", type: "text", value: defaultSymbol() },
+          { key: "margin_mode", label: "保证金模式（margin_mode）", type: "select", value: "cross", options: ["cross", "isolated"] },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({
+          account: accountPayload(),
+          symbol: clean(values.symbol),
+          margin_mode: clean(values.margin_mode),
+          params: jsonValue(values.params, {})
+        })
+      },
+      {
+        id: "closePositions",
+        title: "取消对冲 / 一键平仓",
+        short: "平仓",
+        endpoint: "/api/v1/exchange-adapter/close-positions",
+        description: "查询当前仓位并逐笔提交反向市价只减仓单。交易对留空时关闭全部仓位；本操作不会撤销已有挂单。",
+        danger: true,
+        fields: [
+          { key: "symbols", label: "交易对列表（symbols，留空关闭全部）", type: "text", value: "" },
+          { key: "params", label: "仓位查询参数（params，JSON）", type: "json", value: "{}" },
+          { key: "exchange_order_params", label: "交易所平仓参数（exchange_order_params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({
+          account: accountPayload(),
+          symbols: csv(values.symbols),
+          params: jsonValue(values.params, {}),
+          exchange_order_params: jsonValue(values.exchange_order_params, {}),
+          confirm_close: false
+        })
+      },
+      {
+        id: "placeOrder",
+        title: "提交订单",
+        short: "下单",
+        endpoint: "/api/v1/exchange-adapter/place-order",
+        description: "测试提交订单方法，后端会把请求转给交易所适配器调试接口。",
+        fields: [
+          { key: "client_order_id", label: "客户端订单号（client_order_id）", type: "text", value: autoClientOrderId() },
+          { key: "symbol", label: "交易对（symbol）", type: "text", value: defaultSymbol() },
+          { key: "side", label: "买卖方向（side）", type: "select", value: "BUY", options: ["BUY", "SELL"] },
+          { key: "position_side", label: "持仓方向（position_side）", type: "select", value: "NET", options: ["NET", "LONG", "SHORT"] },
+          { key: "order_type", label: "订单类型（order_type）", type: "select", value: "LIMIT", options: ["LIMIT", "MARKET"] },
+          { key: "quantity", label: "数量（quantity）", type: "number", value: "0.01" },
+          { key: "price", label: "价格（price）", type: "number", value: "50000" },
+          { key: "reduce_only", label: "只减仓（reduce_only）", type: "checkbox", value: false },
+          { key: "exchange_order_params", label: "交易所下单参数（exchange_order_params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => {
+          const account = accountPayload();
+          return {
+            account,
+            client_order_id: clean(values.client_order_id) || autoClientOrderId(),
+            symbol: clean(values.symbol),
+            side: clean(values.side),
+            position_side: normalizedOrderPositionSide(account, values.position_side),
+            order_type: clean(values.order_type),
+            quantity: clean(values.quantity),
+            price: clean(values.price),
+            reduce_only: Boolean(values.reduce_only),
+            exchange_order_params: jsonValue(values.exchange_order_params, {})
+          };
+        }
+      },
+      {
+        id: "fetchOrder",
+        title: "查询订单",
+        short: "查单",
+        endpoint: "/api/v1/exchange-adapter/fetch-order",
+        description: "测试查询订单方法。可以按 exchange_order_id 或 client_order_id 查询。",
+        fields: [
+          { key: "order_id", label: "交易所订单号（order_id）", type: "text", value: "" },
+          { key: "client_order_id", label: "客户端订单号（client_order_id）", type: "text", value: "" },
+          { key: "symbol", label: "交易对（symbol）", type: "text", value: defaultSymbol() },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({
+          account: accountPayload(),
+          order_id: clean(values.order_id),
+          client_order_id: clean(values.client_order_id),
+          symbol: clean(values.symbol),
+          params: jsonValue(values.params, {})
+        })
+      },
+      {
+        id: "cancelOrder",
+        title: "撤销订单",
+        short: "撤单",
+        endpoint: "/api/v1/exchange-adapter/cancel-order",
+        description: "测试撤销订单方法，可以按 exchange_order_id 或 client_order_id 撤销。",
+        fields: [
+          { key: "order_id", label: "交易所订单号（order_id）", type: "text", value: "" },
+          { key: "client_order_id", label: "客户端订单号（client_order_id）", type: "text", value: "" },
+          { key: "symbol", label: "交易对（symbol）", type: "text", value: defaultSymbol() },
+          { key: "params", label: "附加参数（params，JSON）", type: "json", value: "{}" }
+        ],
+        build: values => ({
+          account: accountPayload(),
+          order_id: clean(values.order_id),
+          client_order_id: clean(values.client_order_id),
+          symbol: clean(values.symbol),
+          params: jsonValue(values.params, {})
+        })
+      }
+    ];
+
+    const app = {
+      selected: "fetchBalance",
+      fieldValues: {},
+      history: [],
+      lastResult: null,
+      lastAccountId: null,
+      lastConfigId: null,
+      credentialExchange: ""
+    };
+
+    const credentialStoragePrefix = "6mm.exchange_credentials.v1.";
+
+    init();
+
+    function init() {
+      app.credentialExchange = credentialExchangeKey($("#exchange").value);
+      loadExchangeCredentials($("#exchange").value);
+      bindGlobalEvents();
+      renderTabs();
+      selectMethod(app.selected);
+      renderHistory();
+      updateModeStatus();
+      writeResult("就绪。");
+    }
+
+    function bindGlobalEvents() {
+      $("#baseUrl").addEventListener("change", refreshPayloadFromForm);
+      $("#exchange").addEventListener("change", event => {
+        const presetKey = presetKeyFromExchange(event.target.value);
+        if (presetKey) applyPreset(presetKey);
+      });
+      $("#apiKey").addEventListener("input", saveCurrentExchangeCredentials);
+      $("#apiSecret").addEventListener("input", saveCurrentExchangeCredentials);
+      $("#passphrase").addEventListener("input", saveCurrentExchangeCredentials);
+      $$(".config-grid input, .config-grid select").forEach(input => {
+        input.addEventListener("input", handleAccountFieldChange);
+        input.addEventListener("change", handleAccountFieldChange);
+      });
+      $$(".preset-grid button").forEach(button => {
+        button.addEventListener("click", () => applyPreset(button.dataset.preset));
+      });
+      $("#runMethodBtn").addEventListener("click", () => runSelected());
+      $("#copyPayloadBtn").addEventListener("click", () => copyText($("#payloadEditor").value, "请求已复制"));
+      $("#copyResultBtn").addEventListener("click", () => copyText(typeof app.lastResult === "string" ? app.lastResult : pretty(app.lastResult), "结果已复制"));
+      $("#clearHistoryBtn").addEventListener("click", () => {
+        app.history = [];
+        renderHistory();
+      });
+      $$("[data-workflow]").forEach(button => {
+        button.addEventListener("click", () => runWorkflow(button.dataset.workflow));
+      });
+    }
+
+    function renderTabs() {
+      const container = $("#methodTabs");
+      container.innerHTML = "";
+      methodDefs.forEach(def => {
+        const button = document.createElement("button");
+        button.className = "tab";
+        if (def.danger) button.classList.add("danger");
+        button.type = "button";
+        button.dataset.method = def.id;
+        button.innerHTML = `<strong>${escapeHtml(def.title)}</strong><span>${escapeHtml(def.short)}</span>`;
+        button.addEventListener("click", () => selectMethod(def.id));
+        container.appendChild(button);
+      });
+    }
+
+    function selectMethod(id) {
+      app.selected = id;
+      const def = currentMethod();
+      $$(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.method === id));
+      $("#methodTitle").textContent = def.title;
+      $("#methodDescription").textContent = def.description;
+      $("#methodEndpointPill span:last-child").textContent = def.endpoint;
+      const runButton = $("#runMethodBtn");
+      runButton.className = `button ${def.danger ? "danger" : "primary"}`;
+      runButton.textContent = def.danger ? "确认并一键平仓" : "运行当前方法";
+      renderMethodForm(def);
+      refreshPayloadFromForm();
+    }
+
+    function renderMethodForm(def) {
+      const container = $("#methodForm");
+      container.innerHTML = "";
+      if (!app.fieldValues[def.id]) {
+        app.fieldValues[def.id] = Object.fromEntries(def.fields.map(field => [field.key, field.value]));
+      }
+      def.fields.forEach(field => {
+        const wrap = document.createElement("div");
+        wrap.className = `field ${field.type === "json" ? "span-3" : ""}`;
+        const id = `method-${def.id}-${field.key}`;
+        const label = document.createElement("label");
+        label.setAttribute("for", id);
+        label.textContent = field.label;
+        wrap.appendChild(label);
+
+        let control;
+        if (field.type === "select") {
+          control = document.createElement("select");
+          field.options.forEach(option => {
+            const item = document.createElement("option");
+            item.value = option;
+            item.textContent = optionLabels[option] || option;
+            control.appendChild(item);
+          });
+        } else if (field.type === "json") {
+          control = document.createElement("textarea");
+          control.spellcheck = false;
+        } else if (field.type === "checkbox") {
+          const switchWrap = document.createElement("label");
+          switchWrap.className = "switch";
+          control = document.createElement("input");
+          control.type = "checkbox";
+          switchWrap.appendChild(control);
+          const span = document.createElement("span");
+          span.textContent = field.label;
+          switchWrap.appendChild(span);
+          wrap.innerHTML = "";
+          wrap.appendChild(switchWrap);
+        } else {
+          control = document.createElement("input");
+          control.type = field.type || "text";
+          control.spellcheck = false;
+        }
+
+        control.id = id;
+        control.dataset.fieldKey = field.key;
+        if (field.type === "checkbox") {
+          control.checked = Boolean(app.fieldValues[def.id][field.key]);
+        } else {
+          control.value = app.fieldValues[def.id][field.key] ?? "";
+        }
+        control.addEventListener("input", handleMethodFieldChange);
+        control.addEventListener("change", handleMethodFieldChange);
+        if (field.type !== "checkbox" || wrap.querySelector(".switch") === null) {
+          wrap.appendChild(control);
+        }
+        container.appendChild(wrap);
+      });
+    }
+
+    function handleMethodFieldChange(event) {
+      const def = currentMethod();
+      const control = event.target;
+      app.fieldValues[def.id][control.dataset.fieldKey] = control.type === "checkbox" ? control.checked : control.value;
+      if (def.id === "setLeverage" && control.dataset.fieldKey === "leverage") {
+        syncSetLeverageParams();
+      }
+      refreshPayloadFromForm();
+    }
+
+    function handleAccountFieldChange() {
+      syncSetLeverageParams();
+      refreshPayloadFromForm();
+    }
+
+    function syncSetLeverageParams() {
+      const values = app.fieldValues.setLeverage;
+      if (!values) return;
+      values.params = methodParamsValue(accountPayload(), "setLeverage", values);
+      if (currentMethod().id !== "setLeverage") return;
+      const control = $("#method-setLeverage-params");
+      if (control && document.activeElement !== control) {
+        control.value = values.params;
+      }
+    }
+
+    function refreshPayloadFromForm() {
+      const def = currentMethod();
+      try {
+        $("#payloadEditor").value = pretty(def.build(app.fieldValues[def.id] || {}));
+      } catch (error) {
+        $("#payloadEditor").value = `请求参数无效：${error.message}`;
+      }
+    }
+
+    async function runSelected() {
+      const def = currentMethod();
+      const payload = parsePayloadEditor();
+      if (!payload.ok) {
+        setStatus("error", payload.error);
+        return;
+      }
+      if (def.id === "closePositions") {
+        if (!confirmClosePositions(payload.value)) {
+          setStatus("warn", "已取消一键平仓");
+          return;
+        }
+        payload.value.confirm_close = true;
+        $("#payloadEditor").value = pretty(payload.value);
+      }
+      try {
+        setStatus("warn", `正在运行：${def.title}`);
+        const result = await runHTTPAdapter(def, payload.value);
+        if (def.id === "closePositions" && result?.success === false) {
+          const error = new Error(`部分平仓失败：成功 ${result.successful_orders || 0} 笔，失败 ${result.failed_orders || 0} 笔`);
+          error.payload = result;
+          throw error;
+        }
+        showSuccess(def.title, result);
+      } catch (error) {
+        showError(def.title, error);
+      }
+    }
+
+    function confirmClosePositions(payload) {
+      const account = payload.account || {};
+      const symbols = Array.isArray(payload.symbols) ? payload.symbols.filter(Boolean) : [];
+      const scope = symbols.length > 0 ? symbols.join(", ") : "当前账户全部非零仓位";
+      const environment = account.sandbox ? "测试网 / 模拟盘" : "真实交易环境";
+      return window.confirm([
+        "确认执行取消对冲 / 一键平仓？",
+        `交易所：${account.exchange || "未填写"}`,
+        `账号：${account.account_name || "未填写"}`,
+        `环境：${environment}`,
+        `范围：${scope}`,
+        "",
+        "将提交反向 MARKET + reduceOnly 订单，且不会撤销已有挂单。"
+      ].join("\n"));
+    }
+
+    async function runHTTPAdapter(def, payload) {
+      const url = joinUrl($("#baseUrl").value, def.endpoint);
+      return apiRequest("POST", url, payload);
+    }
+
+    async function runWorkflow(name) {
+      try {
+        setStatus("warn", `正在运行工作流：${workflowLabel(name)}`);
+        const base = $("#baseUrl").value;
+        const account = accountPayload();
+        const symbol = defaultSymbolForAccount(account);
+        const price = defaultPriceForSymbol(symbol);
+        let result;
+
+        if (name === "health") {
+          result = await apiRequest("GET", joinUrl(base, "/healthz"));
+        } else if (name === "options") {
+          result = await apiRequest("GET", joinUrl(base, "/api/v1/exchange-accounts/options"));
+        } else if (name === "syncMarkets") {
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/exchange-markets/sync"), {
+            account,
+            params: jsonValue(methodParamsValue(account, "fetchMarkets"), {})
+          });
+        } else if (name === "listMarkets") {
+          const query = new URLSearchParams({
+            exchange: account.exchange,
+            ccxt_id: account.ccxt_id,
+            market_type: account.market_type,
+            settle_asset: account.default_settle,
+            limit: "200"
+          });
+          result = await apiRequest("GET", joinUrl(base, `/api/v1/exchange-markets?${query.toString()}`));
+        } else if (name === "listAccounts") {
+          result = await apiRequest("GET", joinUrl(base, "/api/v1/exchange-accounts"));
+        } else if (name === "createAccount") {
+          const accountName = `${account.account_name} ${Date.now()}`;
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/exchange-accounts"), {
+            exchange: account.exchange,
+            name: accountName,
+            ccxt_id: account.ccxt_id,
+            market_type: account.market_type,
+            sandbox: account.sandbox,
+            default_settle: account.default_settle,
+            account_type: account.account_type,
+            product_type: account.product_type,
+            category: account.category,
+            position_mode: account.position_mode,
+            margin_mode: account.margin_mode,
+            recv_window_ms: account.recv_window_ms,
+            rate_limit_ms: account.rate_limit_ms,
+            allowed_symbols: [symbol, altSymbolForAccount(account, "ETH")],
+            api_key_encrypted: $("#apiKey").value,
+            api_key_hint: $("#apiKey").value.slice(-4),
+            api_secret_encrypted: $("#apiSecret").value,
+            passphrase_encrypted: $("#passphrase").value,
+            is_primary: false,
+            metadata: { source: "index.html 适配器测试台" }
+          });
+          app.lastAccountId = result.id;
+        } else if (name === "upsertExposure") {
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/exposures"), {
+            source: "platform",
+            symbol,
+            net_quantity: "0.2",
+            net_notional_usdt: fixed(price * 0.2),
+            mark_price: fixed(price)
+          });
+        } else if (name === "upsertPosition") {
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/positions"), {
+            exchange: account.exchange,
+            account_name: account.account_name,
+            symbol,
+            position_side: "NET",
+            quantity: "-0.2",
+            notional_usdt: fixed(price * -0.2),
+            entry_price: fixed(price),
+            mark_price: fixed(price)
+          });
+        } else if (name === "createConfig") {
+          const accountID = requireWorkflowAccountId();
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/hedge-configs"), {
+            exchange_account_id: accountID,
+            source: "platform",
+            symbol,
+            target_symbol: symbol,
+            target_hedge_ratio: "1",
+            first_trigger_usdt: "1000",
+            rebalance_usdt: "200",
+            exit_usdt: "100",
+            max_slippage_bps: 30,
+            max_notional_usdt: "0",
+            min_order_usdt: "10",
+            leverage: 1,
+            enabled: true,
+            dry_run: false,
+            metadata: { source: "index.html 适配器测试台" }
+          });
+          app.lastConfigId = result.id;
+        } else if (name === "runHedge") {
+          const configID = requireWorkflowConfigId();
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/hedge/run"), { config_id: configID });
+        } else if (name === "exitHedge") {
+          const configID = requireWorkflowConfigId();
+          result = await apiRequest("POST", joinUrl(base, "/api/v1/hedge/exit"), { config_id: configID });
+        } else if (name === "audit") {
+          result = await apiRequest("GET", joinUrl(base, "/api/v1/audit-events?limit=20"));
+        } else {
+          throw new Error(`未知工作流：${name}`);
+        }
+
+        showSuccess(`工作流：${workflowLabel(name)}`, result);
+      } catch (error) {
+        showError(`工作流：${workflowLabel(name)}`, error);
+      }
+    }
+
+    function requireWorkflowAccountId() {
+      if (app.lastAccountId) return app.lastAccountId;
+      const raw = prompt("输入 exchange_account_id，或先点“创建测试账号”");
+      const id = Number(raw);
+      if (!Number.isFinite(id) || id <= 0) {
+        throw new Error("必须填写 exchange_account_id");
+      }
+      app.lastAccountId = id;
+      return id;
+    }
+
+    function requireWorkflowConfigId() {
+      if (app.lastConfigId) return app.lastConfigId;
+      const raw = prompt("输入 hedge_config_id，或先点“创建对冲配置”");
+      const id = Number(raw);
+      if (!Number.isFinite(id) || id <= 0) {
+        throw new Error("必须填写 config_id");
+      }
+      app.lastConfigId = id;
+      return id;
+    }
+
+    async function apiRequest(method, url, body) {
+      const options = { method, headers: {} };
+      if (body !== undefined) {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify(body);
+      }
+      let response;
+      try {
+        response = await fetch(url, options);
+      } catch (error) {
+        throw new Error(`${error.message}. 如果页面不是和 Go 服务同源，浏览器可能被 CORS 拦截。`);
+      }
+      const text = await response.text();
+      const data = text ? safeJSON(text) : null;
+      if (!response.ok) {
+        const message = data && data.error ? data.error : `${response.status} ${response.statusText}`;
+        const err = new Error(message);
+        err.payload = { status: response.status, body: data || text };
+        throw err;
+      }
+      return data;
+    }
+
+    function showSuccess(label, result) {
+      app.lastResult = result;
+      writeResult(result);
+      pushHistory({ ok: true, label, result });
+      setStatus("ok", `${label} 成功`);
+    }
+
+    function showError(label, error, extra) {
+      const body = {
+        error: error.message,
+        details: error.payload || null,
+        extra: extra || null
+      };
+      app.lastResult = body;
+      writeResult(body);
+      pushHistory({ ok: false, label, result: body });
+      setStatus("error", `${label} 失败`);
+    }
+
+    function pushHistory(item) {
+      app.history.unshift({
+        ...item,
+        time: new Date().toLocaleTimeString()
+      });
+      app.history = app.history.slice(0, 20);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const view = $("#historyView");
+      if (app.history.length === 0) {
+        view.innerHTML = `<div class="hint">历史记录会显示最近 20 次执行结果。</div>`;
+        return;
+      }
+      view.innerHTML = app.history.map((item, index) => `
+        <div class="history-row">
+          <span class="status-pill ${item.ok ? "ok" : "error"}"><span class="status-dot"></span>${escapeHtml(item.time)}</span>
+          <span class="method-token">${escapeHtml(item.label)}</span>
+          <button type="button" data-history-index="${index}">查看</button>
+        </div>
+      `).join("");
+      $$("[data-history-index]", view).forEach(button => {
+        button.addEventListener("click", () => {
+          const item = app.history[Number(button.dataset.historyIndex)];
+          app.lastResult = item.result;
+          writeResult(item.result);
+        });
+      });
+    }
+
+    function workflowLabel(name) {
+      const labels = {
+        health: "健康检查",
+        options: "交易所选项",
+        syncMarkets: "同步交易对",
+        listMarkets: "交易对列表",
+        listAccounts: "账号列表",
+        createAccount: "创建测试账号",
+        upsertExposure: "写入敞口",
+        upsertPosition: "写入持仓",
+        createConfig: "创建对冲配置",
+        runHedge: "执行对冲",
+        exitHedge: "退出对冲",
+        audit: "审计日志"
+      };
+      return labels[name] || name;
+    }
+
+    function setStatus(kind, text) {
+      const node = $("#lastRunStatus");
+      node.className = `status-pill ${kind}`;
+      node.innerHTML = `<span class="status-dot"></span>${escapeHtml(text)}`;
+    }
+
+    function updateModeStatus() {
+      const node = $("#modeStatus");
+      node.className = "status-pill warn";
+      node.innerHTML = `<span class="status-dot"></span>后端接口`;
+    }
+
+    function writeResult(value) {
+      $("#resultOutput").textContent = typeof value === "string" ? value : pretty(value);
+    }
+
+    function currentMethod() {
+      return methodDefs.find(def => def.id === app.selected) || methodDefs[0];
+    }
+
+    function parsePayloadEditor() {
+      try {
+        return { ok: true, value: JSON.parse($("#payloadEditor").value) };
+      } catch (error) {
+        return { ok: false, error: `JSON 解析失败：${error.message}` };
+      }
+    }
+
+    function accountPayload() {
+      return {
+        exchange: clean($("#exchange").value),
+        account_name: clean($("#accountName").value),
+        ccxt_id: clean($("#ccxtId").value),
+        market_type: clean($("#marketType").value),
+        sandbox: $("#sandbox").checked,
+        default_settle: clean($("#defaultSettle").value),
+        account_type: clean($("#accountType").value),
+        product_type: clean($("#productType").value),
+        category: clean($("#category").value),
+        position_mode: clean($("#positionMode").value),
+        margin_mode: clean($("#marginMode").value),
+        recv_window_ms: Number($("#recvWindow").value || 0),
+        rate_limit_ms: Number($("#rateLimit").value || 0),
+        api_key: $("#apiKey").value,
+        api_secret: $("#apiSecret").value,
+        passphrase: $("#passphrase").value
+      };
+    }
+
+    function defaultSettleAsset(account) {
+      const value = account && (account.default_settle || account.DefaultSettle);
+      return clean(value || $("#defaultSettle")?.value || "USDT").toUpperCase();
+    }
+
+    function defaultSymbol(account) {
+      return defaultSymbolForAccount(accountPayloadFromDefaults(account));
+    }
+
+    function defaultSymbolForAccount(account) {
+      return altSymbolForAccount(account, "BTC");
+    }
+
+    function normalizedOrderPositionSide(account, positionSide) {
+      if (account.position_mode === "one_way") {
+        return "NET";
+      }
+      return clean(positionSide) || "NET";
+    }
+
+    function altSymbolForAccount(account, baseAsset) {
+      const settle = defaultSettleAsset(account);
+      return `${String(baseAsset || "BTC").toUpperCase()}/${settle}:${settle}`;
+    }
+
+    function defaultPriceForSymbol(symbol) {
+      const upper = String(symbol).toUpperCase();
+      if (upper.startsWith("BTC")) return 50000;
+      if (upper.startsWith("ETH")) return 4000;
+      if (upper.startsWith("SOL")) return 150;
+      return 1;
+    }
+
+    function accountPayloadFromDefaults(account) {
+      if (account) return account;
+      return {
+        default_settle: $("#defaultSettle")?.value || "USDT"
+      };
+    }
+
+    function presetKeyFromExchange(exchange) {
+      const target = clean(exchange).toLowerCase();
+      return Object.keys(presets).find(key => presets[key].exchange.toLowerCase() === target) || "";
+    }
+
+    function credentialExchangeKey(exchange) {
+      return clean(exchange).toLowerCase();
+    }
+
+    function credentialStorageKey(exchange) {
+      const key = credentialExchangeKey(exchange);
+      return key ? `${credentialStoragePrefix}${encodeURIComponent(key)}` : "";
+    }
+
+    function saveCurrentExchangeCredentials() {
+      saveExchangeCredentials(app.credentialExchange);
+    }
+
+    function saveExchangeCredentials(exchange) {
+      const storageKey = credentialStorageKey(exchange);
+      if (!storageKey) return;
+
+      const credentials = {
+        api_key: $("#apiKey").value,
+        api_secret: $("#apiSecret").value,
+        passphrase: $("#passphrase").value
+      };
+
+      try {
+        if (!credentials.api_key && !credentials.api_secret && !credentials.passphrase) {
+          localStorage.removeItem(storageKey);
+          return;
+        }
+        localStorage.setItem(storageKey, JSON.stringify(credentials));
+      } catch {
+        // localStorage may be unavailable in private or restricted browser contexts.
+      }
+    }
+
+    function loadExchangeCredentials(exchange) {
+      const storageKey = credentialStorageKey(exchange);
+      let credentials = null;
+
+      if (storageKey) {
+        try {
+          credentials = JSON.parse(localStorage.getItem(storageKey) || "null");
+        } catch {
+          credentials = null;
+        }
+      }
+
+      $("#apiKey").value = typeof credentials?.api_key === "string" ? credentials.api_key : "";
+      $("#apiSecret").value = typeof credentials?.api_secret === "string" ? credentials.api_secret : "";
+      $("#passphrase").value = typeof credentials?.passphrase === "string" ? credentials.passphrase : "";
+    }
+
+    function switchExchangeCredentials(exchange) {
+      const nextExchange = credentialExchangeKey(exchange);
+      if (nextExchange === app.credentialExchange) return;
+
+      saveExchangeCredentials(app.credentialExchange);
+      app.credentialExchange = nextExchange;
+      loadExchangeCredentials(nextExchange);
+    }
+
+    function syncMethodDefaultsForAccount(account) {
+      const symbol = defaultSymbolForAccount(account);
+      const settle = defaultSettleAsset(account);
+      const price = fixed(defaultPriceForSymbol(symbol));
+      mergeMethodValues("fetchBalance", { assets: settle, params: methodParamsValue(account, "fetchBalance") });
+      mergeMethodValues("fetchPositions", { symbols: symbol, params: methodParamsValue(account, "fetchPositions") });
+      mergeMethodValues("fetchTicker", { symbol });
+      mergeMethodValues("fetchMarkets", { params: methodParamsValue(account, "fetchMarkets") });
+      mergeMethodValues("placeOrder", { symbol, price });
+      mergeMethodValues("fetchOrder", { symbol });
+      mergeMethodValues("cancelOrder", { symbol });
+      const setLeverageValues = app.fieldValues.setLeverage || {};
+      mergeMethodValues("setLeverage", {
+        symbol,
+        params: methodParamsValue(account, "setLeverage", { leverage: setLeverageValues.leverage })
+      });
+      mergeMethodValues("setMarginMode", { symbol, params: methodParamsValue(account, "setMarginMode") });
+    }
+
+    function methodParamsValue(account, methodId, values = {}) {
+      const ccxtId = clean(account.ccxt_id || account.CCXTID).toLowerCase();
+      const preset = methodParamPresets[ccxtId]?.[methodId];
+      const existing = jsonObjectValue(values.params);
+      if (typeof preset === "function") {
+        return JSON.stringify(preset(account, values, existing));
+      }
+      if (preset) {
+        return JSON.stringify(preset);
+      }
+      return JSON.stringify(Object.keys(existing).length ? existing : {});
+    }
+
+    function gateSetLeverageParams(account, values = {}, existing = {}) {
+      const params = { ...existing };
+      delete params.leverage;
+      delete params.cross_leverage_limit;
+
+      const leverage = positiveInteger(values.leverage, 2);
+      const marginMode = clean(account.margin_mode || account.MarginMode).toLowerCase();
+      if (marginMode === "isolated") {
+        params.leverage = leverage;
+        return params;
+      }
+
+      params.leverage = 0;
+      params.cross_leverage_limit = leverage;
+      return params;
+    }
+
+    function bitgetFetchBalanceParams(account, existing = {}) {
+      const params = { ...existing };
+      const accountType = clean(account.account_type || account.AccountType).toLowerCase();
+      if (accountType !== "unified" && accountType !== "uta") {
+        if (!params.marginCoin) {
+          params.marginCoin = defaultSettleAsset(account);
+        }
+        return params;
+      }
+
+      params.uta = true;
+      delete params.productType;
+      delete params.marginMode;
+      delete params.marginCoin;
+      delete params.coin;
+      return params;
+    }
+
+    function mergeMethodValues(methodId, values) {
+      const def = methodDefs.find(item => item.id === methodId);
+      if (!def) return;
+      const current = app.fieldValues[methodId] || Object.fromEntries(def.fields.map(field => [field.key, field.value]));
+      app.fieldValues[methodId] = { ...current, ...values };
+    }
+
+    function applyPreset(name) {
+      const preset = presets[name];
+      if (!preset) return;
+      switchExchangeCredentials(preset.exchange);
+      $("#exchange").value = preset.exchange;
+      $("#accountName").value = preset.account_name;
+      $("#ccxtId").value = preset.ccxt_id;
+      $("#marketType").value = preset.market_type;
+      $("#sandbox").checked = preset.sandbox;
+      $("#defaultSettle").value = preset.default_settle;
+      $("#productType").value = preset.product_type;
+      $("#category").value = preset.category;
+      $("#positionMode").value = preset.position_mode;
+      $("#marginMode").value = preset.margin_mode;
+      $("#accountType").value = preset.account_type;
+      syncMethodDefaultsForAccount(preset);
+      renderMethodForm(currentMethod());
+      refreshPayloadFromForm();
+      setStatus("ok", `${preset.account_name} 预设已应用`);
+    }
+
+    function csv(value) {
+      return String(value || "")
+        .split(",")
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function jsonValue(value, fallback) {
+      if (typeof value !== "string") return value ?? fallback;
+      const text = value.trim();
+      if (!text) return fallback;
+      return JSON.parse(text);
+    }
+
+    function jsonObjectValue(value) {
+      const parsed = jsonValue(value, {});
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+      return parsed;
+    }
+
+    function safeJSON(text) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+
+    function clean(value) {
+      return String(value ?? "").trim();
+    }
+
+    function fixed(value) {
+      if (!Number.isFinite(Number(value))) return "0";
+      return Number(value).toFixed(12).replace(/\.?0+$/, "");
+    }
+
+    function positiveInteger(value, fallback) {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+      return Math.trunc(parsed);
+    }
+
+    function pretty(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    function autoClientOrderId() {
+      return `lab_${Date.now()}`;
+    }
+
+    function joinUrl(base, path) {
+      return `${String(base || "").replace(/\/+$/, "")}/${String(path || "").replace(/^\/+/, "")}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    async function copyText(text, message) {
+      try {
+        await navigator.clipboard.writeText(text || "");
+        setStatus("ok", message);
+      } catch {
+        setStatus("error", "复制失败");
+      }
+    }
+  </script>
+</body>
+</html>
